@@ -1,0 +1,46 @@
+# Monitoring stack for the webinar demo. Runs on the SAME machine (EC2 or your
+# laptop) that's already serving the Swiggy delivery-time API on port 8000
+# (see docs/webinar_post_model_lifecycle). Uses bridge networking + explicit
+# port mapping rather than network_mode: host, so this works identically on
+# both a Linux EC2 box and on Docker Desktop (Mac/Windows) for local rehearsal
+# -- host networking only behaves like this on native Linux.
+#
+# Usage:
+#   cd monitoring
+#   docker compose up -d
+#
+# Prometheus UI: http://<HOST>:9090
+# Grafana UI:    http://<HOST>:3000  (default login admin/admin, change it)
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: swiggy-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    extra_hosts:
+      # lets Prometheus reach the app running directly on the host machine
+      # (not in this compose file) via a stable name on both Linux and
+      # Docker Desktop
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: swiggy-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_ALERTING_ENABLED=true
+      - GF_UNIFIED_ALERTING_ENABLED=true
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped

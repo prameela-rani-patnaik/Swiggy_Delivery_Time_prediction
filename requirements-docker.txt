@@ -1,0 +1,10 @@
+fastapi[standard]
+scikit-learn == 1.5.2
+pandas
+numpy
+mlflow
+joblib
+dagshub
+lightgbm
+python-dotenv
+prometheus-fastapi-instrumentator==7.0.0

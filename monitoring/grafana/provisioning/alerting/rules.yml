@@ -1,0 +1,68 @@
+# Grafana file-provisioned alert rule for the "alarm that never sleeps" demo
+# (WOW #6 in docs/webinar_post_model_lifecycle). Fires as soon as any
+# out-of-distribution prediction request is seen in the last 5 minutes.
+#
+# This shows up as "Firing" (red) in Grafana's Alerting > Alert rules page and
+# on the dashboard panel itself — no external notification channel (Slack/email)
+# is configured, since none is needed for a live, on-screen demo. If you want a
+# real notification, add a contact point + notification policy provisioning
+# file alongside this one.
+#
+# NOTE: Grafana's alerting provisioning schema has changed across versions —
+# verify this loads cleanly (Grafana UI > Alerting > Alert rules) the day
+# before the webinar, and fall back to creating the rule manually in the UI
+# if your installed Grafana version rejects this file.
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: swiggy-alerts
+    folder: Swiggy Monitoring
+    interval: 1m
+    rules:
+      - uid: ood-spike-alert
+        title: Out-of-distribution prediction requests spiking
+        condition: C
+        for: 10s
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "The model is receiving prediction requests with feature values outside its training data's range."
+        data:
+          # A: instant query - a range/increase query without instant:true comes back as
+          # time-series data, which Grafana's threshold expression (C) below refuses to
+          # evaluate directly ("only reduced data can be alerted on")
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: increase(ood_requests_total[5m])
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          # B: reduce A to a single scalar (last value in the window)
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          # C: threshold on the reduced value
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+              refId: C

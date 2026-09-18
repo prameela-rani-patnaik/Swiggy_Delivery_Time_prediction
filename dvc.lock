@@ -1,0 +1,150 @@
+schema: '2.0'
+stages:
+  data_cleaning:
+    cmd: python src/data/data_cleaning.py
+    deps:
+    - path: data/raw/swiggy.csv
+      hash: md5
+      md5: 55bd6cc42f2360b5de9569cf9cbd8342
+      size: 7726618
+    - path: src/data/data_cleaning.py
+      hash: md5
+      md5: 95fa1405c109938890456649861a00f0
+      size: 9268
+    outs:
+    - path: data/cleaned/swiggy_cleaned.csv
+      hash: md5
+      md5: 4918716e52fc57babdcd400dfb3c3f29
+      size: 4508527
+  data_preparation:
+    cmd: python src/data/data_preparation.py
+    deps:
+    - path: data/cleaned/swiggy_cleaned.csv
+      hash: md5
+      md5: 4918716e52fc57babdcd400dfb3c3f29
+      size: 4508527
+    - path: src/data/data_preparation.py
+      hash: md5
+      md5: 198e7121f6afba4d93102dc29504beff
+      size: 2863
+    params:
+      params.yaml:
+        Data_Preparation.random_state: 45
+        Data_Preparation.test_size: 0.3
+    outs:
+    - path: data/interim/test.csv
+      hash: md5
+      md5: b248bf46a332d3301ae71b7ba234fa40
+      size: 1351260
+    - path: data/interim/train.csv
+      hash: md5
+      md5: ea214a9c8499e44fbacd1ad17b753619
+      size: 3154309
+  data_preprocessing:
+    cmd: python src/features/data_preprocessing.py
+    deps:
+    - path: data/interim/test.csv
+      hash: md5
+      md5: b248bf46a332d3301ae71b7ba234fa40
+      size: 1351260
+    - path: data/interim/train.csv
+      hash: md5
+      md5: ea214a9c8499e44fbacd1ad17b753619
+      size: 3154309
+    - path: src/features/data_preprocessing.py
+      hash: md5
+      md5: 0ec2243d5af4d5e84bb71cab24f8ca6b
+      size: 6682
+    outs:
+    - path: data/processed/test_trans.csv
+      hash: md5
+      md5: 50e19f69a238af45b832bd94aba4261b
+      size: 1625677
+    - path: data/processed/train_trans.csv
+      hash: md5
+      md5: 61712377586380a5dfe0ec2a72176522
+      size: 3793056
+    - path: models/preprocessor.joblib
+      hash: md5
+      md5: 34efbe22588148de5f594bee4b19fd92
+      size: 7243
+  train:
+    cmd: python src/models/train.py
+    deps:
+    - path: data/processed/train_trans.csv
+      hash: md5
+      md5: 61712377586380a5dfe0ec2a72176522
+      size: 3793056
+    - path: src/models/train.py
+      hash: md5
+      md5: 7b58ff98727eeac3d4f78318ade236c5
+      size: 4753
+    params:
+      params.yaml:
+        Train.LightGBM:
+          n_estimators: 155
+          max_depth: 27
+          learning_rate: 0.22234435854395157
+          subsample: 0.7592213724048168
+          min_child_weight: 20
+          min_split_gain: 0.004604680609280751
+          reg_lambda: 97.81002379097947
+          n_jobs: -1
+        Train.Random_Forest:
+          n_estimators: 479
+          criterion: squared_error
+          max_depth: 17
+          max_features: 1
+          min_samples_split: 9
+          min_samples_leaf: 2
+          max_samples: 0.6603673526197066
+          verbose: 1
+          n_jobs: -1
+    outs:
+    - path: models/model.joblib
+      hash: md5
+      md5: 9599f4e3b4db2bff8e0ad50fedd705a8
+      size: 140509400
+    - path: models/power_transformer.joblib
+      hash: md5
+      md5: 6e208aa4b9b520ab9feb23919e3271b5
+      size: 805
+    - path: models/stacking_regressor.joblib
+      hash: md5
+      md5: 515314e6ae15463a50106ac0f60e6fe6
+      size: 140497818
+  evaluation:
+    cmd: python src/models/evaluation.py
+    deps:
+    - path: data/processed/test_trans.csv
+      hash: md5
+      md5: 50e19f69a238af45b832bd94aba4261b
+      size: 1625677
+    - path: data/processed/train_trans.csv
+      hash: md5
+      md5: 61712377586380a5dfe0ec2a72176522
+      size: 3793056
+    - path: models/model.joblib
+      hash: md5
+      md5: 9599f4e3b4db2bff8e0ad50fedd705a8
+      size: 140509400
+    - path: src/models/evaluation.py
+      hash: md5
+      md5: 3a9b02a40b2b37d23094a697f0573572
+      size: 6183
+    outs:
+    - path: run_information.json
+      hash: md5
+      md5: 729db6120da575c0ec710323026dee19
+      size: 165
+  register_model:
+    cmd: python src/models/register_model.py
+    deps:
+    - path: run_information.json
+      hash: md5
+      md5: 729db6120da575c0ec710323026dee19
+      size: 165
+    - path: src/models/register_model.py
+      hash: md5
+      md5: f2cf4789203f9a287d482a65f594157d
+      size: 2096
