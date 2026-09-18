@@ -73,7 +73,11 @@ if __name__ == "__main__":
         mlflow.set_tag("model", "DEMO - deliberately bad model")
         mlflow.log_params(bad_model.get_params())
         mlflow.log_metric("test_mae", test_mae)
-        mlflow.sklearn.log_model(bad_model, "delivery_time_pred_model")
+        mlflow.sklearn.log_model(
+    bad_model,
+    "delivery_time_pred_model",
+    serialization_format="cloudpickle"
+)
         artifact_uri = mlflow.get_artifact_uri()
 
     run_id = run.info.run_id

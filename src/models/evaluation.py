@@ -194,17 +194,12 @@ if __name__ == "__main__":
         )
 
         # log the final model
-        model_info = mlflow.sklearn.log_model(
-            model,
-            "delivery_time_pred_model",
-            signature=model_signature,
-            skops_trusted_types=[
-                "collections.OrderedDict",
-                "lightgbm.basic.Booster",
-                "lightgbm.sklearn.LGBMRegressor",
-                "sklearn.utils._bunch.Bunch"
-            ]
-        )
+    model_info = mlflow.sklearn.log_model(
+    model,
+    "delivery_time_pred_model",
+    signature=model_signature,
+    serialization_format="cloudpickle"
+)
 
         # log stacking regressor
         mlflow.log_artifact(
