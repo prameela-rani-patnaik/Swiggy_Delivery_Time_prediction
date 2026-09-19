@@ -1,6 +1,3 @@
-# Smoke test: is there a model in the MLflow Model Registry's "Staging" stage,
-# and can it actually be loaded back (not just a dangling pointer)?
-# Run individually: pytest tests/test_model_registry.py -v -s
 import pytest
 import mlflow
 from mlflow import MlflowClient
@@ -9,42 +6,76 @@ import json
 from pathlib import Path
 from dotenv import load_dotenv
 
+from model_loader import load_skops_model
+
+
 load_dotenv()
+
 dagshub.init(
-    repo_owner='prameela2042230',
-    repo_name='Swiggy_Time_Prediction',
+    repo_owner="prameela2042230",
+    repo_name="Swiggy_Time_Prediction",
     mlflow=True
 )
 
 
-def load_model_information(file_path):
-    with open(file_path) as f:
-        run_info = json.load(f)
-
-    return run_info
-
-
-# root path
+# Root project path
 root_path = Path(__file__).parent.parent
 
-# set model name
-model_name = load_model_information(root_path / "run_information.json")["model_name"]
+
+# Load model information
+with open(root_path / "run_information.json") as f:
+    run_information = json.load(f)
 
 
-@pytest.mark.parametrize(argnames="model_name, stage",
-                         argvalues=[(model_name, "Staging")])
-def test_load_model_from_registry(model_name,stage):
+model_name = run_information["model_name"]
+
+
+@pytest.mark.parametrize(
+    "model_name, stage",
+    [(model_name, "Staging")]
+)
+def test_load_model_from_registry(model_name, stage):
+
     client = MlflowClient()
-    latest_versions = client.get_latest_versions(name=model_name,stages=[stage])
-    latest_version = latest_versions[0].version if latest_versions else None
 
-    assert latest_version is not None, f"No model at {stage} stage"
+    versions = client.get_latest_versions(
+        name=model_name,
+        stages=[stage]
+    )
 
-    # load the model
-    model_path = f"models:/{model_name}/{stage}"
+    assert versions, f"No model found in {stage} stage"
 
-    # load the latest model from model registry
-    model = mlflow.sklearn.load_model(model_path)
+    latest_version = versions[0]
 
-    assert model is not None, "Failed to load model from registry"
-    print(f"The {model_name} model with version {latest_version} was loaded successfully")
+    print(f"\nModel: {model_name}")
+    print(f"Stage: {stage}")
+    print(f"Version: {latest_version.version}")
+    print(f"Source: {latest_version.source}")
+
+    # Download registered model artifact
+    downloaded_path = mlflow.artifacts.download_artifacts(
+        artifact_uri=latest_version.source
+    )
+
+    print(f"Downloaded path: {downloaded_path}")
+
+    # Find .skops file
+    skops_files = list(
+        Path(downloaded_path).rglob("*.skops")
+    )
+
+    assert skops_files, (
+        "No .skops model file found in registered artifact"
+    )
+
+    print(f"Found model: {skops_files[0]}")
+
+    # Load model
+    model = load_skops_model(skops_files[0])
+
+    assert model is not None
+
+    print(
+        f"✅ The {model_name} model version "
+        f"{latest_version.version} loaded successfully"
+    )
