@@ -1,0 +1,5 @@
+{
+    "run_id": "db2f549bddc04c68ae18ca030c0048af",
+    "model_uri": "models:/delivery_time_pred_model/2",
+    "model_name": "delivery_time_pred_model"
+}
