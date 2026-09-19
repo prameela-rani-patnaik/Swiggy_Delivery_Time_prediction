@@ -35,7 +35,7 @@ jobs:
           aws-region: eu-north-1
 
       # 5. Pull DVC data
-      - name: DVC Pull
+      - name: DVC Pull --force
         env:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
