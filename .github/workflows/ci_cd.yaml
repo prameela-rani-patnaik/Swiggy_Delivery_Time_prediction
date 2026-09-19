@@ -39,7 +39,7 @@ jobs:
         env:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          dvc pull
+          dvc pull --force
 
       # 6. Test Model Registry
       - name: Test Model Registry
