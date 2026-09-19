@@ -1,3 +1,4 @@
+
 import pandas as pd
 import joblib
 import logging
@@ -9,35 +10,46 @@ from sklearn.metrics import mean_absolute_error, r2_score
 import json
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
+
 dagshub.init(
-    repo_owner='prameela2042230',
-    repo_name='Swiggy_Time_Prediction',
+    repo_owner="prameela2042230",
+    repo_name="Swiggy_Time_Prediction",
     mlflow=True
 )
 
-# set mlflow experiment name
+
+# Set MLflow experiment name
 mlflow.set_experiment("DVC Pipeline_run")
+
 
 TARGET = "time_taken"
 
-# create logger
+
+# Create logger
 logger = logging.getLogger("model_evaluation")
 logger.setLevel(logging.INFO)
 
-# console handler
+
+# Console handler
 handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 
-logger.addHandler(handler)
 
-# create a formatter
+# Avoid adding duplicate handlers
+if not logger.handlers:
+    logger.addHandler(handler)
+
+
+# Create a formatter
 formatter = logging.Formatter(
-    fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-# add formatter to handler
+
+# Add formatter to handler
 handler.setFormatter(formatter)
 
 
@@ -46,7 +58,10 @@ def load_data(data_path: Path) -> pd.DataFrame:
         df = pd.read_csv(data_path)
 
     except FileNotFoundError:
-        logger.error("The file to load does not exist")
+        logger.error(
+            f"The file to load does not exist: {data_path}"
+        )
+        raise
 
     return df
 
@@ -54,15 +69,22 @@ def load_data(data_path: Path) -> pd.DataFrame:
 def make_X_and_y(data: pd.DataFrame, target_column: str):
     X = data.drop(columns=[target_column])
     y = data[target_column]
+
     return X, y
 
 
 def load_model(model_path: Path):
     model = joblib.load(model_path)
+
     return model
 
 
-def save_model_info(save_json_path, run_id, model_uri, model_name):
+def save_model_info(
+    save_json_path,
+    run_id,
+    model_uri,
+    model_name
+):
     info_dict = {
         "run_id": run_id,
         "model_uri": model_uri,
@@ -70,54 +92,170 @@ def save_model_info(save_json_path, run_id, model_uri, model_name):
     }
 
     with open(save_json_path, "w") as f:
-        json.dump(info_dict, f, indent=4)
+        json.dump(
+            info_dict,
+            f,
+            indent=4
+        )
 
 
 if __name__ == "__main__":
 
-    # root path
+    # =========================================================
+    # ROOT PATH
+    # =========================================================
+
     root_path = Path(__file__).parent.parent.parent
 
-    # train data load path
-    train_data_path = root_path / "data" / "processed" / "train_trans.csv"
-    test_data_path = root_path / "data" / "processed" / "test_trans.csv"
 
-    # model path
-    model_path = root_path / "models" / "model.joblib"
+    # =========================================================
+    # DATA PATHS
+    # =========================================================
 
-    # load the training data
+    train_data_path = (
+        root_path
+        / "data"
+        / "processed"
+        / "train_trans.csv"
+    )
+
+    test_data_path = (
+        root_path
+        / "data"
+        / "processed"
+        / "test_trans.csv"
+    )
+
+
+    # =========================================================
+    # MODEL PATH
+    # =========================================================
+
+    model_path = (
+        root_path
+        / "models"
+        / "model.joblib"
+    )
+
+
+    # =========================================================
+    # MODEL NAME
+    # =========================================================
+
+    model_name = "delivery_time_pred_model"
+
+
+    # =========================================================
+    # LOAD TRAINING DATA
+    # =========================================================
+
     train_data = load_data(train_data_path)
-    logger.info("Train data loaded successfully")
 
-    # load the test data
+    logger.info(
+        "Train data loaded successfully"
+    )
+
+
+    # =========================================================
+    # LOAD TEST DATA
+    # =========================================================
+
     test_data = load_data(test_data_path)
-    logger.info("Test data loaded successfully")
 
-    # split the train and test data
-    X_train, y_train = make_X_and_y(train_data, TARGET)
-    X_test, y_test = make_X_and_y(test_data, TARGET)
-    logger.info("Data split completed")
+    logger.info(
+        "Test data loaded successfully"
+    )
 
-    # load the model
+
+    # =========================================================
+    # SPLIT TRAIN AND TEST DATA
+    # =========================================================
+
+    X_train, y_train = make_X_and_y(
+        train_data,
+        TARGET
+    )
+
+    X_test, y_test = make_X_and_y(
+        test_data,
+        TARGET
+    )
+
+    logger.info(
+        "Data split completed"
+    )
+
+
+    # =========================================================
+    # LOAD MODEL
+    # =========================================================
+
     model = load_model(model_path)
-    logger.info("Model Loaded successfully")
 
-    # get the predictions
-    y_train_pred = model.predict(X_train)
-    y_test_pred = model.predict(X_test)
-    logger.info("prediction on data complete")
+    logger.info(
+        "Model loaded successfully"
+    )
 
-    # calculate the train and test mae
-    train_mae = mean_absolute_error(y_train, y_train_pred)
-    test_mae = mean_absolute_error(y_test, y_test_pred)
-    logger.info("error calculated")
 
-    # calculate the r2 scores
-    train_r2 = r2_score(y_train, y_train_pred)
-    test_r2 = r2_score(y_test, y_test_pred)
-    logger.info("r2 score calculated")
+    # =========================================================
+    # PREDICTIONS
+    # =========================================================
 
-    # calculate cross val scores
+    y_train_pred = model.predict(
+        X_train
+    )
+
+    y_test_pred = model.predict(
+        X_test
+    )
+
+    logger.info(
+        "Prediction on data complete"
+    )
+
+
+    # =========================================================
+    # MAE
+    # =========================================================
+
+    train_mae = mean_absolute_error(
+        y_train,
+        y_train_pred
+    )
+
+    test_mae = mean_absolute_error(
+        y_test,
+        y_test_pred
+    )
+
+    logger.info(
+        "Error calculated"
+    )
+
+
+    # =========================================================
+    # R2 SCORE
+    # =========================================================
+
+    train_r2 = r2_score(
+        y_train,
+        y_train_pred
+    )
+
+    test_r2 = r2_score(
+        y_test,
+        y_test_pred
+    )
+
+    logger.info(
+        "R2 score calculated"
+    )
+
+
+    # =========================================================
+    # CROSS VALIDATION
+    # =========================================================
+
     cv_scores = cross_val_score(
         model,
         X_train,
@@ -127,37 +265,87 @@ if __name__ == "__main__":
         n_jobs=-1
     )
 
-    logger.info("cross validation complete")
+    logger.info(
+        "Cross validation complete"
+    )
 
-    # mean cross val score
-    mean_cv_score = -(cv_scores.mean())
 
-    # log with mlflow
+    # =========================================================
+    # MEAN CROSS VALIDATION SCORE
+    # =========================================================
+
+    mean_cv_score = -cv_scores.mean()
+
+
+    # =========================================================
+    # START MLFLOW RUN
+    # =========================================================
+
     with mlflow.start_run() as run:
 
-        # set tags
+        # -----------------------------------------------------
+        # SET TAGS
+        # -----------------------------------------------------
+
         mlflow.set_tag(
             "model",
             "Food Delivery Time Regressor"
         )
 
-        # log parameters
-        mlflow.log_params(model.get_params())
 
-        # log metrics
-        mlflow.log_metric("train_mae", train_mae)
-        mlflow.log_metric("test_mae", test_mae)
-        mlflow.log_metric("train_r2", train_r2)
-        mlflow.log_metric("test_r2", test_r2)
-        mlflow.log_metric("mean_cv_score", -(cv_scores.mean()))
+        # -----------------------------------------------------
+        # LOG PARAMETERS
+        # -----------------------------------------------------
 
-        # log individual cv scores
+        mlflow.log_params(
+            model.get_params()
+        )
+
+
+        # -----------------------------------------------------
+        # LOG METRICS
+        # -----------------------------------------------------
+
+        mlflow.log_metric(
+            "train_mae",
+            train_mae
+        )
+
+        mlflow.log_metric(
+            "test_mae",
+            test_mae
+        )
+
+        mlflow.log_metric(
+            "train_r2",
+            train_r2
+        )
+
+        mlflow.log_metric(
+            "test_r2",
+            test_r2
+        )
+
+        mlflow.log_metric(
+            "mean_cv_score",
+            mean_cv_score
+        )
+
+
+        # -----------------------------------------------------
+        # LOG INDIVIDUAL CV SCORES
+        # -----------------------------------------------------
+
         mlflow.log_metrics({
             f"CV {num}": score
             for num, score in enumerate(-cv_scores)
         })
 
-        # mlflow dataset input datatype
+
+        # -----------------------------------------------------
+        # MLFLOW DATASET INPUT
+        # -----------------------------------------------------
+
         train_data_input = mlflow.data.from_pandas(
             train_data,
             targets=TARGET
@@ -168,68 +356,122 @@ if __name__ == "__main__":
             targets=TARGET
         )
 
-        # log input
+
+        # -----------------------------------------------------
+        # LOG TRAINING INPUT
+        # -----------------------------------------------------
+
         mlflow.log_input(
             dataset=train_data_input,
             context="training"
         )
+
+
+        # -----------------------------------------------------
+        # LOG VALIDATION INPUT
+        # -----------------------------------------------------
 
         mlflow.log_input(
             dataset=test_data_input,
             context="validation"
         )
 
-        # model signature
+
+        # =====================================================
+        # MODEL SIGNATURE
+        # =====================================================
+        #
+        # Use the actual training data instead of only a small
+        # sample. This allows MLflow to observe the real column
+        # data types and missing-value behavior.
+        # =====================================================
+
         model_signature = mlflow.models.infer_signature(
-            model_input=X_train.sample(
-                20,
-                random_state=42
-            ),
-            model_output=model.predict(
-                X_train.sample(
-                    20,
-                    random_state=42
-                )
-            )
+            model_input=X_train,
+            model_output=model.predict(X_train)
         )
 
-        # log the final model
-    model_info = mlflow.sklearn.log_model(
-    model,
-    "delivery_time_pred_model",
-    signature=model_signature,
-    serialization_format="cloudpickle"
-)
 
-        # log stacking regressor
+        # =====================================================
+        # LOG AND REGISTER FINAL MODEL
+        # =====================================================
+        #
+        # IMPORTANT:
+        # - name="model" replaces deprecated artifact_path
+        # - cloudpickle is explicitly used
+        # - registered_model_name registers the logged model
+        # =====================================================
+
+        model_info = mlflow.sklearn.log_model(
+            sk_model=model,
+            name="model",
+            registered_model_name=model_name,
+            signature=model_signature,
+            serialization_format="cloudpickle",
+        )
+
+
+        # =====================================================
+        # LOG STACKING REGRESSOR
+        # =====================================================
+
         mlflow.log_artifact(
-            root_path / "models" / "stacking_regressor.joblib"
+            root_path
+            / "models"
+            / "stacking_regressor.joblib"
         )
 
-        # log the power transformer
+
+        # =====================================================
+        # LOG POWER TRANSFORMER
+        # =====================================================
+
         mlflow.log_artifact(
-            root_path / "models" / "power_transformer.joblib"
+            root_path
+            / "models"
+            / "power_transformer.joblib"
         )
 
-        # log the preprocessor
+
+        # =====================================================
+        # LOG PREPROCESSOR
+        # =====================================================
+
         mlflow.log_artifact(
-            root_path / "models" / "preprocessor.joblib"
+            root_path
+            / "models"
+            / "preprocessor.joblib"
         )
 
-        # get the current run artifact uri
+
+        # =====================================================
+        # GET ARTIFACT URI
+        # =====================================================
+
         artifact_uri = mlflow.get_artifact_uri()
 
+
         logger.info(
-            "Mlflow logging complete and model logged"
+            "MLflow logging complete and model logged"
         )
 
-    # get the run id
+
+    # =========================================================
+    # GET RUN ID
+    # =========================================================
+
     run_id = run.info.run_id
 
-    model_name = "delivery_time_pred_model"
 
-    # save the model info
-    save_json_path = root_path / "run_information.json"
+    # =========================================================
+    # SAVE MODEL INFORMATION
+    # =========================================================
+
+    save_json_path = (
+        root_path
+        / "run_information.json"
+    )
+
 
     save_model_info(
         save_json_path=save_json_path,
@@ -238,4 +480,8 @@ if __name__ == "__main__":
         model_name=model_name
     )
 
-    logger.info("Model Information saved")
+
+    logger.info(
+        "Model Information saved"
+    )
+
