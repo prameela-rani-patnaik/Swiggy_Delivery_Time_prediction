@@ -8,15 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       # 1. Checkout code
       - name: Code Checkout
         uses: actions/checkout@v4
-            # 1. Checkout code
-      - name: Code Checkout
-        uses: actions/checkout@v4
 
-      # 1.1 Debug Model URI
+      # 2. Debug Model URI
       - name: Debug Model URI
         run: |
           echo "Current commit:"
@@ -28,21 +24,20 @@ jobs:
           echo "run_information.json:"
           cat run_information.json
 
-
-      # 2. Setup Python
+      # 3. Setup Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: pip
 
-      # 3. Install dependencies
+      # 4. Install dependencies
       - name: Install Packages
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      # 4. Configure AWS Credentials
+      # 5. Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -50,28 +45,28 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      # 5. Pull DVC data
-      - name: DVC Pull --force
+      # 6. Pull DVC data
+      - name: DVC Pull
         env:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           dvc pull --force
 
-      # 6. Test Model Registry
+      # 7. Test Model Registry
       - name: Test Model Registry
         env:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           pytest tests/test_model_registry.py
 
-      # 7. Test Model Performance
+      # 8. Test Model Performance
       - name: Test Model Performance
         env:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           pytest tests/test_model_perf.py
 
-      # 8. Promote Model
+      # 9. Promote Model
       - name: Promote Model
         if: success()
         env:
@@ -80,25 +75,25 @@ jobs:
           # python scripts/promote_model_to_prod.py
           echo "Model promotion skipped"
 
-      # 9. Login to Amazon ECR
+      # 10. Login to Amazon ECR
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 10. Build Docker image
+      # 11. Build Docker image
       - name: Build Docker Image
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: latest
         run: |
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker build -t "$REGISTRY/$REPOSITORY:$IMAGE_TAG" .
 
-      # 11. Push Docker image
+      # 12. Push Docker image
       - name: Push Docker Image to ECR
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: latest
         run: |
-          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker push "$REGISTRY/$REPOSITORY:$IMAGE_TAG"
