@@ -88,9 +88,7 @@ target/
 *.swp
 *.swo
 
-# Mypy cache
-.mypy_cache/
-/run_information.json
+\
 
 # contains a live secret, never commit
 /docs/DEPLOYMENT_DEMO_PLAN.md
