@@ -12,6 +12,22 @@ jobs:
       # 1. Checkout code
       - name: Code Checkout
         uses: actions/checkout@v4
+            # 1. Checkout code
+      - name: Code Checkout
+        uses: actions/checkout@v4
+
+      # 1.1 Debug Model URI
+      - name: Debug Model URI
+        run: |
+          echo "Current commit:"
+          git rev-parse HEAD
+
+          echo "Current branch:"
+          git branch --show-current
+
+          echo "run_information.json:"
+          cat run_information.json
+
 
       # 2. Setup Python
       - name: Setup Python
