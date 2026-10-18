@@ -43,7 +43,7 @@ jobs:
       #   run: |
       #     pytest tests/test_model_perf.py
 
-      # - name: Promote Model
+      # - name: Promotes Model
       #   if: success()
       #   env:
       #     DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}

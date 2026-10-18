@@ -59,4 +59,4 @@ dvc remote list
 ## Notes
 
 - AWS credentials are never committed to the repo. Locally, export them as environment variables (or configure the standard `~/.aws/credentials` file via `aws configure`). In CI, they are injected via GitHub Actions secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) as configured in `.github/workflows/ci_cd.yaml`.
-- If an AWS key is ever exposed (e.g. pasted into a chat, log, or committed by mistake), rotate it immediately in IAM before continuing to use it.
+- If an AWS key is ever exposed (e.g. pasted into a chat, log, or committed by mistake), rotate it immediately in IAM before continuing to use ittt.
