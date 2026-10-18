@@ -11,9 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-dagshub.init(repo_owner="prameela2042230",
-             repo_name="Swiggy_Time_Prediction",
-             mlflow=True)
+dagshub.init(repo_owner='prameela2042230', repo_name='Swiggy_Time_Prediction', mlflow=True)
 
 
 
@@ -154,7 +152,7 @@ if __name__ == "__main__":
                                     model_output=model.predict(X_train.sample(20,random_state=42)))
         
         # log the final model
-        mlflow.sklearn.log_model(model,"delivery_time_pred_model",signature=model_signature,serialization_format="cloudpickle")
+        mlflow.sklearn.log_model(model,"delivery_time_pred_model",signature=model_signature)
 
         # log stacking regressor
         mlflow.log_artifact(root_path / "models" / "stacking_regressor.joblib")

@@ -9,16 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-dagshub.init(
-    repo_owner="prameela2042230",
-    repo_name="Swiggy_Time_Prediction",
-    mlflow=True
-)
-
-mlflow.set_tracking_uri(
-    "https://dagshub.com/prameela2042230/Swiggy_Time_Prediction.mlflow"
-)
-print("MLflow Tracking URI:", mlflow.get_tracking_uri())
+dagshub.init(repo_owner='prameela2042230', repo_name='Swiggy_Time_Prediction', mlflow=True)
 
 
 # create logger
@@ -60,7 +51,7 @@ if __name__ == "__main__":
     model_name = run_info["model_name"]
     
     # model to register path
-    model_registry_path = run_info["model_uri"]
+    model_registry_path = f"runs:/{run_id}/{model_name}"
     
     
     # register the model

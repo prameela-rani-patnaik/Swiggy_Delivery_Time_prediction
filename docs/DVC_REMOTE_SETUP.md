@@ -2,7 +2,7 @@
 
 This project uses an S3 bucket as the DVC remote for storing data and model artifacts tracked by the pipeline (`dvc.yaml`).
 
-- **Bucket**: `my-swiggydvc `
+- **Bucket**: `swiggyy-time-predicition-dvc`
 - **Region**: `eu-north-1`
 - **Remote name**: `s3remote`
 
@@ -22,7 +22,7 @@ export AWS_DEFAULT_REGION="eu-north-1"
 This is the command that configured `.dvc/config`. You only need to re-run it if setting up a fresh clone/remote from scratch:
 
 ```bash
-dvc remote add -d s3remote s3://my-swiggydvc
+dvc remote add -d s3remote s3://swiggyy-time-predicition-dvc
 ```
 
 This writes to `.dvc/config`:
@@ -31,7 +31,7 @@ This writes to `.dvc/config`:
 [core]
     remote = s3remote
 ['remote "s3remote"']
-    url = s3://my-swiggy-dvc
+    url = s3://swiggyy-time-predicition-dvc
 ```
 
 ## 3. Push tracked data/artifacts to the remote

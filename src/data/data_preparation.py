@@ -25,7 +25,7 @@ handler.setFormatter(formatter)
 
 def load_data(data_path: Path) -> pd.DataFrame:
     try:
-        df = pd.read_csv(r"data/cleaned/swiggy_cleaned.csv")
+        df = pd.read_csv(data_path)
     
     except FileNotFoundError:
         logger.error("The file to load does not exist")

@@ -11,9 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-dagshub.init(repo_owner="prameela2042230",
-             repo_name="Swiggy_Time_Prediction",
-             mlflow=True)
+dagshub.init(repo_owner='prameela2042230', repo_name='Swiggy_Time_Prediction', mlflow=True)
 
 
 def load_model_information(file_path):
