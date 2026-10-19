@@ -21,7 +21,7 @@ COPY ./scripts/data_clean_utils.py ./scripts/data_clean_utils.py
 COPY ./run_information.json ./
 
 # expose the port
-EXPOSE 8000
+EXPOSE 8001
 
 # Run the file using command
 CMD [ "python","./app.py" ]
